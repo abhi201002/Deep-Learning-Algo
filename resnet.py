@@ -133,4 +133,4 @@ class block(nn.Module):
 # res = model(image)
 # print(res.shape)
 
-Res
+# Res

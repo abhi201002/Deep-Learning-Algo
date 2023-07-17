@@ -104,9 +104,7 @@ class GoogleNet(nn.Module):
         self.fc = nn.Sequential(
             nn.Flatten(),
             nn.Dropout(0.5),
-            nn.Linear(1024,4096),
-            nn.Dropout(0.5),
-            nn.Linear(4096,num_classes)
+            nn.Linear(1024,num_classes)
         )
     def forward(self, x):
         return self.fc(self.avg(self.layer(x)))

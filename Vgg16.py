@@ -51,11 +51,16 @@ class Vgg16(nn.Module):
         self.relu = nn.ReLU()
         self.fc = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(in_features = 10752,out_features = 4096),
+            nn.Dropout(0.5),
+            nn.Linear(in_features = 512 * 7 * 7,out_features = 4096),
+            nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(in_features = 4096,out_features = 1000),
+            nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(in_features = 1000,out_features = num_classes)
         )
-        self.spp = SPP([4,2,1])
+        # self.spp = SPP([4,2,1])
         # self.flatten = nn.Flatten(0,2)
     def forward(self,x):
         in_channel = 3
@@ -74,11 +79,11 @@ class Vgg16(nn.Module):
                     in_channel = layer[0]
         # x = self.spp(x)  
         # return self.fc(self.flatten(x))
-        return self.fc(self.spp(x))
+        return self.fc(x)
     
 model = Vgg16(num_classes=2)
-img = torch.randn((1,3,100,1000))
-res = model(img.unsqueeze(0))
+img = torch.randn((1,3,224,224))
+res = model(img)
 # # res = torch.empty(0)
 # # a = torch.tensor([1,2,3])
 # # res = torch.cat([res,a],axis = 0)
