@@ -57,7 +57,6 @@ class Vgg16(nn.Module):
             nn.Dropout(0.5),
             nn.Linear(in_features = 4096,out_features = 1000),
             nn.ReLU(),
-            nn.Dropout(0.5),
             nn.Linear(in_features = 1000,out_features = num_classes)
         )
         # self.spp = SPP([4,2,1])
@@ -71,7 +70,7 @@ class Vgg16(nn.Module):
                 for _ in range(layer[2]):
                     x = Conv(
                         in_channel = in_channel,
-                        out_channel =layer[0],
+                        out_channel = layer[0],
                         size = layer[1],
                         stride = 1,
                         padding = 1 if layer[1] == 3 else 0

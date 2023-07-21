@@ -1,1 +1,2 @@
-img
+
+print(res.shape)

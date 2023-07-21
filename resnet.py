@@ -2,19 +2,20 @@ import torch
 from torch import nn
 
 class ResNet(nn.Module):
-    def __init__(self,num_classes, in_channels, layer = [3,6,4,3]):
+    def __init__(self,num_classes = 2, in_channels = 3, layer = [3,6,4,3]):
         super().__init__()
         self.in_channels = 64
         self.bn = nn.BatchNorm2d(64)
         self.relu = nn.ReLU()
-        self.maxpool = nn.MaxPool2d(kernel_size = 3, stride = 2)
+        self.maxpool = nn.MaxPool2d(kernel_size = 3, stride = 2, padding = 1)
         self.adaptive_pooling = nn.AdaptiveAvgPool2d((1, 1))
         self.conv1 = nn.Conv2d(
             in_channels = in_channels,
             out_channels = 64,
             kernel_size = 7, 
             stride = 2,
-            padding = 3
+            padding = 3,
+            bias = False
         )
         self.layer1 = self.make_layer(
             size = 64,
@@ -36,7 +37,12 @@ class ResNet(nn.Module):
             repeats = layer[3],
             stride = 2
         )
-        self.fc = nn.Linear(512*4, num_classes)
+        self.fc = nn.Sequential(
+            nn.Dropout(0.7),
+            nn.Linear(512*4, 128),
+            nn.ReLU(),
+            nn.Linear(128, num_classes)
+        )
     def forward(self,x):
         x = self.conv1(x)
         x = self.bn(x)
@@ -52,13 +58,16 @@ class ResNet(nn.Module):
         return x
     def make_layer(self, size, repeats, stride):
         layers = []
-        downsample = nn.Conv2d(
-            in_channels = self.in_channels,
-            out_channels = size * 4,
-            kernel_size = 1,
-            stride = stride,
-            bias = False,
-        )
+        downsample = None
+        
+        if stride != 1 or self.in_channels != size * 4:
+            downsample = nn.Conv2d(
+                in_channels = self.in_channels,
+                out_channels = size * 4,
+                kernel_size = 1,
+                stride = stride,
+                bias = False,
+            )
         
         layers.append(block(size = size, in_channels = self.in_channels, stride = stride, downsample = downsample))
         
@@ -76,20 +85,23 @@ class block(nn.Module):
             in_channels = in_channels,
             out_channels = size,
             kernel_size = 1,
-            stride = 1
+            stride = 1,
+            bias = False
         )
         self.conv2 = nn.Conv2d(
             in_channels = size,
             out_channels = size,
             kernel_size = 3,
             stride = stride,
-            padding = 1
+            padding = 1,
+            bias = False
         )
         self.conv3 = nn.Conv2d(
             in_channels = size,
             out_channels = size * 4,
             kernel_size = 1,
             stride = 1,
+            bias = False
         )
         self.relu = nn.ReLU()
         self.bn1 = nn.BatchNorm2d(size)
@@ -108,11 +120,11 @@ class block(nn.Module):
         self.layer3 = nn.Sequential(
             self.conv3,
             self.bn2,
-            self.relu
+            # self.relu
         )
     
     def forward(self,x):
-        identity = x
+        identity = x.clone()
         
         if self.downsample is not None:
             identity = self.downsample(x)
@@ -125,12 +137,15 @@ class block(nn.Module):
         x = self.relu(x)
         return x
         
-# image = torch.randn((1,3,224,224))
+image = torch.randn((1,3,224,224))
 # # print(image.shape)
 
-# model = ResNet([3,6,4,3],2,3)
+model = ResNet()
 
-# res = model(image)
-# print(res.shape)
+# for name,params in model.named_parameters():
+#     print(name," ",params)
+
+res = model(image)
+print(res.shape)
 
 # Res
